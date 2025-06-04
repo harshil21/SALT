@@ -69,8 +69,8 @@ fn transmit_data() {
 }
 
 fn run_sensors() {
-    let mut bmp280 = init_pressure_sensor();
     let mut sensor = init_orientation_sensor();
+    let mut bmp280 = init_pressure_sensor();
     let mut transmitted_packet = TransmittedPacket {
         pressure: 0.0,
         altitude: 0.0,
