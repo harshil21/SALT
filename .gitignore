@@ -31,6 +31,8 @@ wheels/
 # Virtual environments
 .venv
 
+.vscode/
+
 
 # Added by cargo
 

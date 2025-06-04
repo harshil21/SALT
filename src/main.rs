@@ -1,9 +1,12 @@
 use std::process::Command;
 use bmp280::Bmp280Builder;
 use std::thread;
+use bno055;
+use linux_embedded_hal::I2cdev;
 
 fn main() {
-    init_pressure_sensor();
+    // Start new thread for pressure sensor:
+    run_sensors();
 }
 
 fn record_video() {
@@ -19,16 +22,10 @@ fn record_video() {
     }
 }
 
+fn run_sensors() {
+    let mut bmp280 = init_pressure_sensor();
+    let mut sensor = init_orientation_sensor();
 
-fn init_pressure_sensor() {
-    // We can have I2C read/write errors sometimes, so just keep trying:
-    let mut bmp280 = loop {
-        if let Ok(dev) = Bmp280Builder::new().build() {
-            break dev
-        }
-    };
-
-    bmp280.zero().expect("Failed to reset pressure to zero");
 
     loop {
         // Pressure
@@ -52,6 +49,38 @@ fn init_pressure_sensor() {
             println!("Read/write error");
         }
 
+        // Orientation
+        match sensor.euler_angles() {
+            Ok(euler) => {
+                println!("Orientation: {:?}", euler);
+            }
+            Err(e) => {
+                eprintln!("Error reading orientation: {:?}", e);
+            }
+        }
+
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
+}
+
+fn init_pressure_sensor() -> bmp280::Bmp280 {
+    // Initialize the BMP280 sensor
+    // We can have I2C read/write errors sometimes, so just keep trying:
+    let mut bmp280 = loop {
+        if let Ok(dev) = Bmp280Builder::new().build() {
+            break dev
+        }
+    };
+
+    bmp280.zero().expect("Failed to reset pressure to zero");
+    return bmp280;
+}
+
+fn init_orientation_sensor() -> bno055::Bno055<linux_embedded_hal::I2cdev> {
+    // Initialize the BNO055 sensor
+    let i2c = I2cdev::new("/dev/i2c-1")
+        .expect("Failed to open I2C device");
+    
+    let sensor = bno055::Bno055::new(i2c);
+    sensor
 }
