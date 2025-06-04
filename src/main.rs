@@ -106,7 +106,7 @@ fn run_sensors() {
         match sensor.get_euler_angles() {
             Ok(euler) => {
                 println!("Orientation: {:?}", euler);
-                transmitted_packet.orientation = (euler.a, euler.b, euler.c);
+                transmitted_packet.orientation = (euler.x, euler.y, euler.z);
             }
             Err(e) => {
                 eprintln!("Error reading orientation: {:?}", e);
