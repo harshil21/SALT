@@ -3,6 +3,7 @@ use bmp280::Bmp280Builder;
 use std::thread;
 use bno055;
 use linux_embedded_hal::I2cdev;
+use linux_embedded_hal::Delay;
 use std::time::Duration;
 use std::io::Write;
 
@@ -29,19 +30,25 @@ fn record_video() {
     let status = Command::new("rpicam-vid")
         .args(&["-t", "10000", "-o", "test.h264", "--inline", "--awb", "auto", "--width", "1920", "--height", "1080"])
         .stdout(Stdio::null())
-        .status()
-        .expect("failed to execute camera command");
+        .output();
 
-    if status.success() {
-        println!("Video captured successfully!");
-    } else {
-        eprintln!("Camera command failed with status: {:?}", status);
+    match status {
+        Ok(output) => {
+            if output.status.success() {
+                println!("Video recording started successfully.");
+            } else {
+                eprintln!("Failed to start video recording: {:?}", output);
+            }
+        }
+        Err(e) => {
+            eprintln!("Error executing rpicam-vid command: {}", e);
+        }
     }
 }
 
 fn transmit_data() {
     // Open the serial port with desired settings
-    let mut iter = 1;
+    let mut iter = 0;
     loop {
         let mut port = serialport::new("/dev/serial0", 9600)
             .timeout(Duration::from_millis(1000))
@@ -126,9 +133,11 @@ fn init_pressure_sensor() -> bmp280::Bmp280 {
 
 fn init_orientation_sensor() -> bno055::Bno055<linux_embedded_hal::I2cdev> {
     // Initialize the BNO055 sensor
+    let mut delay = Delay;
     let i2c = I2cdev::new("/dev/i2c-1")
         .expect("Failed to open I2C device");
     
-    let sensor = bno055::Bno055::new(i2c);
+    let mut sensor = bno055::Bno055::new(i2c);
+    sensor.init(&mut delay).expect("Failed to initialize BNO055 sensor");
     sensor
 }
