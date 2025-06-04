@@ -30,3 +30,8 @@ wheels/
 
 # Virtual environments
 .venv
+
+
+# Added by cargo
+
+/target
