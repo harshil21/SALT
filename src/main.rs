@@ -1,9 +1,8 @@
 use std::process::{Command, Stdio};
 use bmp280::Bmp280Builder;
+use linux_bno055::Bno055;
 use std::thread;
-use bno055;
-use linux_embedded_hal::I2cdev;
-use linux_embedded_hal::Delay;
+use linux_bno055 as bno055;
 use std::time::Duration;
 use std::io::Write;
 
@@ -104,7 +103,7 @@ fn run_sensors() {
         }
 
         // Orientation
-        match sensor.euler_angles() {
+        match sensor.get_euler_angles() {
             Ok(euler) => {
                 println!("Orientation: {:?}", euler);
                 transmitted_packet.orientation = (euler.a, euler.b, euler.c);
@@ -131,13 +130,14 @@ fn init_pressure_sensor() -> bmp280::Bmp280 {
     return bmp280;
 }
 
-fn init_orientation_sensor() -> bno055::Bno055<linux_embedded_hal::I2cdev> {
+fn init_orientation_sensor() -> bno055::Bno055 {
     // Initialize the BNO055 sensor
-    let mut delay = Delay;
-    let i2c = I2cdev::new("/dev/i2c-1")
-        .expect("Failed to open I2C device");
+    // let mut delay = Delay;
+    // let i2c = I2cdev::new("/dev/i2c-1")
+    //     .expect("Failed to open I2C device");
     
-    let mut sensor = bno055::Bno055::new(i2c);
-    sensor.init(&mut delay).expect("Failed to initialize BNO055 sensor");
+    // let mut sensor = bno055::Bno055::new(i2c);
+    let sensor = Bno055::new("/dev/i2c-1")
+        .expect("Failed to create BNO055 sensor instance");
     sensor
 }
