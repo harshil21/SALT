@@ -41,6 +41,7 @@ fn record_video() {
 
 fn transmit_data() {
     // Open the serial port with desired settings
+    let mut iter = 1;
     loop {
         let mut port = serialport::new("/dev/serial0", 9600)
             .timeout(Duration::from_millis(1000))
@@ -48,10 +49,12 @@ fn transmit_data() {
             .expect("Failed to open port");
 
         // Data to send
-        let output = b"Hello, serial world!\n";
+        iter += 1;
+        let output = format!("Hello, serial world! {}\n", iter);
+        println!("Transmitting: {}", output);
 
         // Write data to the serial port
-        port.write_all(output).expect("Write failed!");
+        port.write_all(output.as_bytes()).expect("Write failed!");
 
         thread::sleep(Duration::from_millis(1000));
     }
