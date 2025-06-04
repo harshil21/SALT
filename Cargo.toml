@@ -5,4 +5,4 @@ edition = "2024"
 
 [dependencies]
 bmp280 = "0.4.0"
-bno055 = "0.4.0"
+bno055 = { version = "0.4.0", features = ["std"] }
