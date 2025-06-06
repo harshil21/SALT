@@ -64,6 +64,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chrono"
+version = "0.4.41"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c469d952047f47f91b68d1cba3f10d63c11d73e4636f24f08daf0278abf01c4d"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -94,6 +103,12 @@ dependencies = [
  "embedded-hal",
  "nb",
 ]
+
+[[package]]
+name = "fixed_deque"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b25bdbebcd575b30e6527c0c33e106374a7a0173161fe14365d61db8184f1b72"
 
 [[package]]
 name = "gpio-cdev"
@@ -353,6 +368,8 @@ name = "sam-rocket"
 version = "0.1.0"
 dependencies = [
  "bmp280",
+ "chrono",
+ "fixed_deque",
  "linux-embedded-hal",
  "linux_bno055",
  "serialport",

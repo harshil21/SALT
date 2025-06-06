@@ -37,3 +37,7 @@ wheels/
 # Added by cargo
 
 /target
+
+
+# Repomix for compiling all files into one for prompting LLMs:
+repomix-output.xml
