@@ -1,7 +1,7 @@
 # SALT
 
 Samuel's Atmospheric Live Telemetry (SALT) is a rocket made by [@samuel300p](https://github.com/samuel300p)
-which features a transmitting live telemetry from the rocket to a ground station using LoRa.
+which features transmitting live telemetry from the rocket to a ground station using LoRa.
 
 The main sensors and components include:
 
