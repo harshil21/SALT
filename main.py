@@ -1,20 +1,14 @@
 import time
-import digitalio
-import struct
 
-import queue
 import multiprocessing
 import board
-import threading
-import adafruit_bmp280
 import adafruit_bno055
+import adafruit_bmp280
 import serial
-import os
 
 i2c = board.I2C()
-# bmp_cs = digitalio.DigitalInOut(board.D10)
 bmp280 = adafruit_bmp280.Adafruit_BMP280_I2C(i2c)
-#bno = adafruit_bno055.BNO055_I2C(i2c)
+bno = adafruit_bno055.BNO055_I2C(i2c)
 
 
 def send_data(q):
@@ -30,16 +24,16 @@ def send_data(q):
 def main():
     print("Hello from sam-rocket!")
 
-    q = multiprocessing.Queue()
-    thread = multiprocessing.Process(target=send_data, args=(q,))
-    thread.start()
+    q = multiprocessing.Queue()  # Doing mp to reduce I2C errors (not sure if this actually fixes that)
+    process = multiprocessing.Process(target=send_data, args=(q,))
+    process.start()
     iter = 1
 
     while True:
         # print(f"Temperature: {bmp280.temperature}")
         # print(f"Gravity: {bno.gravity}")
         try:
-            # accel = bno.acceleration
+            accel = bno.acceleration
             temp = bmp280.temperature
         except Exception:  # i2c erros
             print("I2c read error")
@@ -47,7 +41,7 @@ def main():
             continue
 
         # temp = bmp280.temperature
-        print(f"Iter: {iter}, Accel: {temp}")
+        print(f"Iter: {iter}, Accel: {accel}, Temp: {temp}")
         q.put((temp, iter))
         iter += 1 
         time.sleep(0.0)

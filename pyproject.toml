@@ -1,12 +1,15 @@
 [project]
-name = "sam-rocket"
+name = "SALT"
 version = "0.1.0"
-description = "Add your description here"
+description = "Samuel's Atmospheric Live Telemetry"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "adafruit-circuitpython-bmp280>=3.3.7",
     "adafruit-circuitpython-bno055>=5.4.19",
+    "matplotlib>=3.10.3",
+    "numpy>=2.2.6",
+    "pyqt6>=6.9.1",
     "pyserial>=3.5",
     "rpi-gpio>=0.7.1",
 ]
