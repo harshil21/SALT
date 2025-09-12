@@ -25,7 +25,7 @@ This is written in Rust (experimental, since I'm still learning Rust). To get st
 simply need to build the project with `cargo build --release` and run `cargo run --release`.
 
 Note: If you want to skip waiting for compilation on the Pi Zero 2W, you can cross compile via `cross` and Docker - `cargo install cross`,
-and then: `cross build --target aarch64-unknown-linux-gnu`, and then copy the binary (from `target/`) to the Pi Zero 2W.
+`docker build -t my-cross-aarch64-udev .`, and then: `cross build --target aarch64-unknown-linux-gnu`, and then copy the binary (from `target/`) to the Pi Zero 2W.
 
 A prototyping script in Python is available as `main.py` for testing purposes, but it is not used in the final flight software.
 
