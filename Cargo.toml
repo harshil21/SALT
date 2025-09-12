@@ -1,8 +1,8 @@
 [package]
-name = "sam-rocket"
+name = "salt"
 version = "0.1.0"
 edition = "2024"
-default-run = "sam-rocket"
+default-run = "salt"
 
 [dependencies]
 bmp280 = "0.4.0"

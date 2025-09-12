@@ -364,7 +364,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sam-rocket"
+name = "salt"
 version = "0.1.0"
 dependencies = [
  "bmp280",

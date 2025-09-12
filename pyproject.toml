@@ -1,5 +1,5 @@
 [project]
-name = "SALT"
+name = "salt"
 version = "0.1.0"
 description = "Samuel's Atmospheric Live Telemetry"
 readme = "README.md"

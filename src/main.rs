@@ -1,6 +1,6 @@
 //! Main script for the Rust project.
 
-use sam_rocket::context::Context;
+use salt::context::Context;
 use std::thread;
 
 fn main() {
@@ -23,7 +23,7 @@ fn main() {
         context.update();
 
         // break from the loop if we are in shutdown state:
-        if let sam_rocket::state::RocketState::Shutdown = context.state {
+        if let salt::state::RocketState::Shutdown = context.state {
             println!("Shutting down...");
             break;
         }
