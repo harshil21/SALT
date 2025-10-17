@@ -10,7 +10,7 @@ pub struct Context {
     pub state: RocketState,
     pub data_processor: DataProcessor,
     pub imu: IMU,
-    pub transmitter: Transmitter,
+    pub transmitter: Option<Transmitter>,
     pub logger: Logger,
 }
 
@@ -20,7 +20,8 @@ impl Context {
             state: RocketState::Standby(StandbyState {}),
             data_processor: DataProcessor::new(),
             imu: IMU::new(),
-            transmitter: Transmitter::new("/dev/serial0"),
+            transmitter: None,
+            // transmitter: Transmitter::new("/dev/serial0"),
             logger: Logger::new(),
         }
     }
@@ -39,9 +40,9 @@ impl Context {
             self.state = new_state;
         }
         // Transmit data:
-        let transmitter_data_packet =
-            self.prepare_transmitter_data_packet(&imu_data_packet, &processor_data_packet);
-        self.transmitter.transmit(&transmitter_data_packet);
+        // let transmitter_data_packet =
+        //     self.prepare_transmitter_data_packet(&imu_data_packet, &processor_data_packet);
+        // self.transmitter.transmit(&transmitter_data_packet);
 
         // Log data
         self.logger
@@ -71,35 +72,35 @@ impl Context {
         }
     }
 
-    /// Waits for the "SALT BOOT" command from the transmitter, so we can start the hot loop.
-    /// The main loop will call this function in a loop until it returns true.
-    pub fn wait_for_boot_command(&mut self) -> bool {
-        match self.transmitter.read() {
-            Ok(data) if data == "SALT BOOT" => {
-                println!("Received SALT BOOT command, transitioning to Countdown state.");
-                self.start_camera_recording();
-                self.state = RocketState::Countdown(CountdownState {});
-                true
-            }
-            Ok(data) if data == "wait" => {
-                println!("waiting for start command");
-                false
-            }
+    // / Waits for the "SALT BOOT" command from the transmitter, so we can start the hot loop.
+    // / The main loop will call this function in a loop until it returns true.
+    // pub fn wait_for_boot_command(&mut self) -> bool {
+    //     match self.transmitter.read() {
+    //         Ok(data) if data == "SALT BOOT" => {
+    //             println!("Received SALT BOOT command, transitioning to Countdown state.");
+    //             self.start_camera_recording();
+    //             self.state = RocketState::Countdown(CountdownState {});
+    //             true
+    //         }
+    //         Ok(data) if data == "wait" => {
+    //             println!("waiting for start command");
+    //             false
+    //         }
 
-            Ok(data) => {
-                println!(
-                    "Unknown command received: {}. Staying in Standby state.",
-                    data
-                );
-                false
-            }
+    //         Ok(data) => {
+    //             println!(
+    //                 "Unknown command received: {}. Staying in Standby state.",
+    //                 data
+    //             );
+    //             false
+    //         }
 
-            Err(_) => {
-                eprintln!("Failed to read from transmitter, starting countdown anyway.");
-                self.start_camera_recording();
-                self.state = RocketState::Countdown(CountdownState {});
-                true
-            }
-        }
-    }
+    //         Err(_) => {
+    //             eprintln!("Failed to read from transmitter, starting countdown anyway.");
+    //             self.start_camera_recording();
+    //             self.state = RocketState::Countdown(CountdownState {});
+    //             true
+    //         }
+    //     }
+    // }
 }
