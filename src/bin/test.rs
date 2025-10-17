@@ -17,10 +17,11 @@ fn main() {
     thread::spawn(|| {
         run_sensors();
     });
-    thread::spawn(|| {
-        transmit_data();
-    });
-    record_video();
+    // thread::spawn(|| {
+    //     transmit_data();
+    // });
+    // record_video();
+    thread::sleep(Duration::from_secs(10));
 }
 
 fn record_video() {
@@ -121,6 +122,16 @@ fn run_sensors() {
                 eprintln!("Error reading orientation: {:?}", e);
             }
         }
+
+        match sensor.get_linear_acceleration() {
+            Ok(accel) => {
+                println!("Linear Acceleration: {:?}", accel);
+            }
+            Err(e) => {
+                eprintln!("Error reading linear acceleration: {:?}", e);
+            }
+        }
+
 
         std::thread::sleep(std::time::Duration::from_millis(50));
     }

@@ -1,14 +1,12 @@
 import time
 
 import multiprocessing
-import board
-import adafruit_bno055
-import adafruit_bmp280
+from bmp280 import BMP280
 import serial
 
-i2c = board.I2C()
-bmp280 = adafruit_bmp280.Adafruit_BMP280_I2C(i2c)
-bno = adafruit_bno055.BNO055_I2C(i2c)
+bmp280 = BMP280()
+
+# bno = adafruit_bno055.BNO055_I2C(i2c)
 
 
 def send_data(q):
@@ -33,15 +31,16 @@ def main():
         # print(f"Temperature: {bmp280.temperature}")
         # print(f"Gravity: {bno.gravity}")
         try:
-            accel = bno.acceleration
+            # accel = bno.acceleration
             temp = bmp280.temperature
+            pressure = bmp280.get_altitude()
         except Exception:  # i2c erros
             print("I2c read error")
             time.sleep(0.1)
             continue
 
         # temp = bmp280.temperature
-        print(f"Iter: {iter}, Accel: {accel}, Temp: {temp}")
+        print(f"Iter: {iter}, Pressure: {pressure}, Temp: {temp}")
         q.put((temp, iter))
         iter += 1 
         time.sleep(0.0)

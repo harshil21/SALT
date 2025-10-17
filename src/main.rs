@@ -7,10 +7,10 @@ fn main() {
     let mut context = Context::new();
 
     // Wait for the rocket to be armed before starting the main loop:
-    println!("Waiting for rocket to be armed...");
-    while !context.wait_for_boot_command() {
-        println!("waiting for boot command...");
-    }
+    // println!("Waiting for rocket to be armed...");
+    // while !context.wait_for_boot_command() {
+    //     println!("waiting for boot command...");
+    // }
 
     // Handle the first update:
     context.imu.read_data();
