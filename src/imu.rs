@@ -1,11 +1,11 @@
 use bmp280::{Bmp280, Bmp280Builder};
 use linux_bno055::Bno055;
 use std::thread;
-use std::time::Instant;
+use std::time::{SystemTime};
 
 #[derive(Clone, Debug)]
 pub struct IMUDataPacket {
-    pub timestamp: Instant,
+    pub timestamp: u64,
     // From the BNO055 sensor:
     pub acceleration: [f32; 3],   // array of (x, y, z) in m/s^2
     pub quaternion: [f32; 4],     // array of (w, x, y, z)
@@ -35,12 +35,16 @@ impl IMU {
             }
             thread::sleep(std::time::Duration::from_secs(1));
         };
+        println!("BMP280 sensor initialized.");
         bmp280.zero().expect("Failed to reset pressure to zero");
         let sensor = Bno055::new("/dev/i2c-1").expect("Failed to create BNO055 sensor instance");
 
         // The initial data packet is created directly.
+
         let initial_packet = IMUDataPacket {
-            timestamp: Instant::now(),
+            timestamp: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos() as u64,
             acceleration: [0.0, 0.0, 0.0],
             quaternion: [1.0, 0.0, 0.0, 0.0],
             pressure_alt: 0.0,
@@ -110,6 +114,8 @@ impl IMU {
         }
 
         // Always update the timestamp to the time of the last read attempt.
-        self.imu_data_packet.timestamp = Instant::now();
+        self.imu_data_packet.timestamp = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos() as u64;
     }
 }
