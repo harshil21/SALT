@@ -36,7 +36,7 @@ impl Logger {
     fn write_headers(&mut self) -> io::Result<()> {
         writeln!(
             self.writer,
-            "timestamp,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z,quat_w,quat_x,quat_y,quat_z,pressure,altitude,max_altitude,velocity,max_velocity,temperature"
+            "timestamp,state,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z,quat_w,quat_x,quat_y,quat_z,pressure,altitude,max_altitude,velocity,max_velocity,temperature"
         )?;
         Ok(())
     }
@@ -45,11 +45,13 @@ impl Logger {
         &mut self,
         imu_data: &IMUDataPacket,
         processor_data: &ProcessorDataPacket,
+        state: &char
     ) -> () {
         if let Err(e) = writeln!(
             self.writer,
-            "{:?},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+            "{:?},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
             imu_data.timestamp,
+            state,
             imu_data.acceleration[0],
             imu_data.acceleration[1],
             imu_data.acceleration[2],

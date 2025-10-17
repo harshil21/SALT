@@ -44,9 +44,26 @@ impl Context {
         //     self.prepare_transmitter_data_packet(&imu_data_packet, &processor_data_packet);
         // self.transmitter.transmit(&transmitter_data_packet);
 
+        // Match state name to a single character for logging:
+        let state_char = match self.state.name() {
+            "Standby" => 'S',
+            "Countdown" => 'C',
+            "MotorBurn" => 'M',
+            "Coast" => 'O',
+            "FreeFall" => 'F',
+            "Landed" => 'L',
+            "Shutdown" => 'X',
+            _ => 'U', // Unknown
+        };
+
         // Log data
         self.logger
-            .log_packets(&imu_data_packet, &processor_data_packet);
+            .log_packets(&imu_data_packet, &processor_data_packet, &state_char);
+
+        println!("Pressure alt: {} m", imu_data_packet.pressure_alt);
+        println!("Current Velocity: {} m/s", processor_data_packet.vertical_velocity);
+        println!("Max Velocity: {} m/s", processor_data_packet.maximum_velocity);
+        println!("");
     }
 
     pub fn start_camera_recording(&self) {

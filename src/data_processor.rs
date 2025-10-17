@@ -80,7 +80,7 @@ impl DataProcessor {
                     .as_ref()
                     .unwrap()
                     .timestamp;
-            velocity = altitude_diff / time_diff as f32;
+            velocity = altitude_diff / (time_diff as f32 / 1e9);
             self.last_velocity_calculation_packet = Some(data_packet.clone());
         } else {
             velocity = self.vertical_velocity;
