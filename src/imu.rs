@@ -20,7 +20,7 @@ pub struct IMUDataPacket {
 
 pub struct IMU {
     bmp280: Bmp280,
-    bno055: Bno055,
+    // bno055: Bno055,
     // The data packet is now owned directly by the struct.
     imu_data_packet: IMUDataPacket,
 }
@@ -37,7 +37,7 @@ impl IMU {
         };
         println!("BMP280 sensor initialized.");
         bmp280.zero().expect("Failed to reset pressure to zero");
-        let sensor = Bno055::new("/dev/i2c-1").expect("Failed to create BNO055 sensor instance");
+        // let sensor = Bno055::new("/dev/i2c-1").expect("Failed to create BNO055 sensor instance");
 
         // The initial data packet is created directly.
 
@@ -56,7 +56,7 @@ impl IMU {
 
         IMU {
             bmp280,
-            bno055: sensor,
+            // bno055: sensor,
             imu_data_packet: initial_packet,
         }
     }
@@ -89,29 +89,29 @@ impl IMU {
             eprintln!("Failed to read pressure from BMP280");
         }
 
-        if let Ok(quat) = self.bno055.get_quaternion() {
-            self.imu_data_packet.quaternion = [quat.w, quat.x, quat.y, quat.z];
-        } else {
-            eprintln!("Failed to read quaternion from BNO055");
-        }
+        // if let Ok(quat) = self.bno055.get_quaternion() {
+        //     self.imu_data_packet.quaternion = [quat.w, quat.x, quat.y, quat.z];
+        // } else {
+        //     eprintln!("Failed to read quaternion from BNO055");
+        // }
 
-        if let Ok(mag) = self.bno055.get_magnetometer() {
-            self.imu_data_packet.magnetic_field = [mag.x, mag.y, mag.z];
-        } else {
-            eprintln!("Failed to read magnetic field from BNO055");
-        }
+        // if let Ok(mag) = self.bno055.get_magnetometer() {
+        //     self.imu_data_packet.magnetic_field = [mag.x, mag.y, mag.z];
+        // } else {
+        //     eprintln!("Failed to read magnetic field from BNO055");
+        // }
 
-        if let Ok(acc) = self.bno055.get_accelerometer() {
-            self.imu_data_packet.acceleration = [acc.x, acc.y, acc.z];
-        } else {
-            eprintln!("Failed to read acceleration from BNO055");
-        }
+        // if let Ok(acc) = self.bno055.get_accelerometer() {
+        //     self.imu_data_packet.acceleration = [acc.x, acc.y, acc.z];
+        // } else {
+        //     eprintln!("Failed to read acceleration from BNO055");
+        // }
 
-        if let Ok(gyro) = self.bno055.get_gyroscope() {
-            self.imu_data_packet.gyro = [gyro.x, gyro.y, gyro.z];
-        } else {
-            eprintln!("Failed to read gyroscope from BNO055");
-        }
+        // if let Ok(gyro) = self.bno055.get_gyroscope() {
+        //     self.imu_data_packet.gyro = [gyro.x, gyro.y, gyro.z];
+        // } else {
+        //     eprintln!("Failed to read gyroscope from BNO055");
+        // }
 
         // Always update the timestamp to the time of the last read attempt.
         self.imu_data_packet.timestamp = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)
