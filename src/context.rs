@@ -5,6 +5,8 @@ use crate::{
     state::{CountdownState, RocketState, StandbyState},
     transmitter::{Transmitter, TransmitterDataPacket},
 };
+use std::time::{Duration, Instant};
+
 
 pub struct Context {
     pub state: RocketState,
@@ -12,6 +14,7 @@ pub struct Context {
     pub imu: IMU,
     pub transmitter: Option<Transmitter>,
     pub logger: Logger,
+    last_transmit: Option<Instant>
 }
 
 impl Context {
@@ -20,9 +23,10 @@ impl Context {
             state: RocketState::Standby(StandbyState {}),
             data_processor: DataProcessor::new(),
             imu: IMU::new(),
-            transmitter: None,
-            // transmitter: Transmitter::new("/dev/serial0"),
+            // transmitter: None,
+            transmitter: Some(Transmitter::new("/dev/ttyAMA0")),
             logger: Logger::new(),
+            last_transmit: None,
         }
     }
 
@@ -39,10 +43,21 @@ impl Context {
         if let Some(new_state) = self.state.should_transition(self) {
             self.state = new_state;
         }
-        // Transmit data:
-        // let transmitter_data_packet =
-        //     self.prepare_transmitter_data_packet(&imu_data_packet, &processor_data_packet);
-        // self.transmitter.transmit(&transmitter_data_packet);
+        // Transmit every 0.5 seconds
+        let now = Instant::now();
+        let should_transmit = match self.last_transmit {
+            Some(last) => now.duration_since(last) >= Duration::from_millis(200),
+            None => true,
+        };
+
+        if should_transmit {
+            let transmitter_data_packet =
+                self.prepare_transmitter_data_packet(&imu_data_packet, &processor_data_packet);
+            if let Some(transmitter) = &mut self.transmitter {
+                transmitter.transmit(&transmitter_data_packet);
+            }
+            self.last_transmit = Some(now);
+        }
 
         // Match state name to a single character for logging:
         let state_char = match self.state.name() {
@@ -63,6 +78,7 @@ impl Context {
         println!("Pressure alt: {} m", imu_data_packet.pressure_alt);
         println!("Current Velocity: {} m/s", processor_data_packet.vertical_velocity);
         println!("Max Velocity: {} m/s", processor_data_packet.maximum_velocity);
+        println!("Accel: {} m/s^2", imu_data_packet.acceleration[2]);
         println!("");
     }
 

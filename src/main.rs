@@ -30,6 +30,6 @@ fn main() {
 
         // Sleep for a short duration to avoid I2C flooding, and because the sensors have a max
         // update rate:
-        thread::sleep(std::time::Duration::from_millis(29));
+        thread::sleep(std::time::Duration::from_millis(50));
     }
 }
