@@ -1,6 +1,7 @@
 use bmp280::{Bmp280, Bmp280Builder};
 use linux_embedded_hal::{Delay, I2cdev};
 use mpu6050::*;
+use mpu6050::device::{WHOAMI, AccelRange, GyroRange, ACCEL_HPF};
 use std::thread;
 use std::time::SystemTime;
 
@@ -44,12 +45,67 @@ impl IMU {
                 let mut sensor = Mpu6050::new_with_addr(i2cdev, 0x68);
                 match sensor.init(&mut delay) {
                     Ok(()) => {
-                        println!("MPU6050 initialized successfully.");
+                        println!("MPU6050 initialized at address 0x68.");
                         Some(sensor)
                     }
-                    Err(e) => {
-                        eprintln!("MPU6050 init failed: {:?}. Continuing without it.", e);
-                        None
+                    Err(Mpu6050Error::InvalidChipId(id)) => {
+                        eprintln!("MPU6050 WHO_AM_I mismatch at 0x68: 0x{:02X}. Trying manual init...", id);
+                        let manual_ok = sensor.set_sleep_enabled(false).is_ok()
+                            && { thread::sleep(std::time::Duration::from_millis(100)); true }
+                            && sensor.set_accel_range(AccelRange::G2).is_ok()
+                            && sensor.set_gyro_range(GyroRange::D250).is_ok()
+                            && sensor.set_accel_hpf(ACCEL_HPF::_RESET).is_ok();
+                        if manual_ok {
+                            if let Ok(whoami) = sensor.read_byte(WHOAMI) {
+                                eprintln!("Manual init succeeded; WHO_AM_I now 0x{:02X}", whoami);
+                            } else {
+                                eprintln!("Manual init succeeded; WHO_AM_I read failed");
+                            }
+                            Some(sensor)
+                        } else {
+                            eprintln!("Manual init failed at 0x68. Trying address 0x69...");
+                            match I2cdev::new("/dev/i2c-1") {
+                                Ok(i2cdev2) => {
+                                    let mut sensor2 = Mpu6050::new_with_addr(i2cdev2, 0x69);
+                                    match sensor2.init(&mut delay) {
+                                        Ok(()) => {
+                                            println!("MPU6050 initialized at address 0x69.");
+                                            Some(sensor2)
+                                        }
+                                        Err(err69) => {
+                                            eprintln!("MPU6050 init failed at 0x69: {:?}. Continuing without it.", err69);
+                                            None
+                                        }
+                                    }
+                                }
+                                Err(eopen2) => {
+                                    eprintln!("Failed to reopen /dev/i2c-1 for alt address: {:?}. Continuing without sensor.", eopen2);
+                                    None
+                                }
+                            }
+                        }
+                    }
+                    Err(err68) => {
+                        eprintln!("MPU6050 init failed at 0x68: {:?}", err68);
+                        match I2cdev::new("/dev/i2c-1") {
+                            Ok(i2cdev2) => {
+                                let mut sensor2 = Mpu6050::new_with_addr(i2cdev2, 0x69);
+                                match sensor2.init(&mut delay) {
+                                    Ok(()) => {
+                                        println!("MPU6050 initialized at address 0x69.");
+                                        Some(sensor2)
+                                    }
+                                    Err(err69) => {
+                                        eprintln!("MPU6050 init failed at 0x69: {:?}. Continuing without it.", err69);
+                                        None
+                                    }
+                                }
+                            }
+                            Err(eopen2) => {
+                                eprintln!("Failed to reopen /dev/i2c-1 for alt address: {:?}. Continuing without sensor.", eopen2);
+                                None
+                            }
+                        }
                     }
                 }
             }
