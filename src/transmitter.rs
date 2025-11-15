@@ -61,11 +61,21 @@ impl Transmitter {
 
                     // Check if we have a complete line (ending with newline)
                     if let Some(newline_pos) = self.buffer.find('\n') {
-                        // Extract the complete command
-                        let command = self.buffer[..newline_pos].trim().to_string();
-                        // Remove the processed command from the buffer
+                        // Extract the complete line
+                        let raw_line = &self.buffer[..newline_pos];
+                        // Sanitize: drop non-ASCII and control characters (e.g., '\r', '\u{FFFD}')
+                        let cleaned: String = raw_line
+                            .chars()
+                            .filter(|c| c.is_ascii() && !c.is_ascii_control())
+                            .collect();
+                        let command = cleaned.trim().to_string();
+                        // Remove the processed line from the buffer
                         self.buffer = self.buffer[newline_pos + 1..].to_string();
-                        Ok(command)
+                        if command.is_empty() {
+                            Ok(String::from("wait"))
+                        } else {
+                            Ok(command)
+                        }
                     } else {
                         // No complete command yet, return "wait"
                         Ok(String::from("wait"))
