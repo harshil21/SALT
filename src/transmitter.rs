@@ -33,6 +33,7 @@ impl Transmitter {
         let output = format!(
             "{},{:.1},{:.1},{:.1},{:.1},{:.1},{:.1},{:.1}\n",
             state_letter,
+
             data_packet.alt,
             data_packet.vel,
             data_packet.max_alt,
@@ -55,8 +56,9 @@ impl Transmitter {
             Ok(bytes_read) => {
                 if bytes_read > 0 {
                     // Append new data to the buffer
-                    self.buffer.push_str(&String::from_utf8_lossy(&temp_buffer[..bytes_read]));
-                    
+                    self.buffer
+                        .push_str(&String::from_utf8_lossy(&temp_buffer[..bytes_read]));
+
                     // Check if we have a complete line (ending with newline)
                     if let Some(newline_pos) = self.buffer.find('\n') {
                         // Extract the complete command
@@ -65,9 +67,9 @@ impl Transmitter {
                         self.buffer = self.buffer[newline_pos + 1..].to_string();
                         Ok(command)
                     } else {
-                        // No complete command yet
-                        Err("Incomplete command".into())
-                    }, return "wait"Ok(String::from("wait"
+                        // No complete command yet, return "wait"
+                        Ok(String::from("wait"))
+                    }
                 } else {
                     // No data read, return "wait"
                     Ok(String::from("wait"))
@@ -76,7 +78,7 @@ impl Transmitter {
             Err(_) => {
                 // Read error, return "wait"
                 Ok(String::from("wait"))
-            },
+            }
         }
     }
 }

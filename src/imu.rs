@@ -38,6 +38,7 @@ impl IMU {
         };
         println!("BMP280 sensor initialized.");
         bmp280.zero().expect("Failed to reset pressure to zero");
+        bmp280.zero().expect("Failed to reset pressure to zero");
         // Try to create and initialize MPU6050; if anything fails keep None.
         let mut delay = Delay;
         let mpu6050 = match I2cdev::new("/dev/i2c-1") {
