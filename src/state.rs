@@ -1,6 +1,6 @@
 use crate::constants::{
-    GROUND_ALTITUDE_METERS, MAX_FREE_FALL_SECONDS, MAX_VELOCITY_THRESHOLD,
-    SECONDS_TO_CONSIDERED_LANDED, TAKEOFF_VELOCITY_METERS_PER_SECOND,
+    GROUND_ALTITUDE_METERS, MAX_ALTITUDE_THRESHOLD, MAX_FREE_FALL_SECONDS,
+    SECONDS_TO_CONSIDERED_LANDED,
 };
 use crate::context::Context;
 use crate::data_processor::ProcessorDataPacket;
@@ -89,7 +89,7 @@ impl State for StandbyState {
 impl State for CountdownState {
     fn update_internal(&mut self, _: &ProcessorDataPacket) {}
     fn should_transition(&self, context: &Context) -> Option<RocketState> {
-        if context.data_processor.vertical_velocity >= TAKEOFF_VELOCITY_METERS_PER_SECOND {
+        if context.data_processor.current_altitude >= GROUND_ALTITUDE_METERS {
             Some(RocketState::MotorBurn(MotorBurnState {}))
         } else {
             None
@@ -100,7 +100,7 @@ impl State for CountdownState {
 impl State for MotorBurnState {
     fn update_internal(&mut self, _: &ProcessorDataPacket) {}
     fn should_transition(&self, context: &Context) -> Option<RocketState> {
-        if context.data_processor.vertical_velocity < MAX_VELOCITY_THRESHOLD {
+        if context.data_processor.current_altitude >= context.data_processor.max_altitude * MAX_ALTITUDE_THRESHOLD {
             Some(RocketState::CoastState(CoastState {}))
         } else {
             None
@@ -111,7 +111,7 @@ impl State for MotorBurnState {
 impl State for CoastState {
     fn update_internal(&mut self, _: &ProcessorDataPacket) {}
     fn should_transition(&self, context: &Context) -> Option<RocketState> {
-        if context.data_processor.vertical_velocity < 0.0 {
+        if context.data_processor.current_altitude < context.data_processor.max_altitude * MAX_ALTITUDE_THRESHOLD {
             Some(RocketState::FreeFall(FreeFallState {
                 start_time: std::time::Instant::now(),
                 landing_timer: None,
@@ -151,10 +151,9 @@ impl State for FreeFallState {
 
 impl State for LandedState {
     fn update_internal(&mut self, _: &ProcessorDataPacket) {}
-    fn should_transition(&self, context: &Context) -> Option<RocketState> {
+    fn should_transition(&self, _: &Context) -> Option<RocketState> {
         // Switch to shutdown state after 5 seconds:
         if self.start_time.elapsed().as_secs() >= 5 {
-            context.stop_camera_recording();
             return Some(RocketState::Shutdown {});
         }
         None

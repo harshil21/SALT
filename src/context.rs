@@ -77,17 +77,9 @@ impl Context {
 
         println!("Pressure alt: {} m", imu_data_packet.pressure_alt);
         println!("Current Velocity: {} m/s", processor_data_packet.vertical_velocity);
-        println!("Max Velocity: {} m/s", processor_data_packet.maximum_velocity);
+        // println!("Max Velocity: {} m/s", processor_data_packet.maximum_velocity);
         println!("Accel: {} m/s^2", imu_data_packet.acceleration[2]);
         println!("");
-    }
-
-    pub fn start_camera_recording(&self) {
-        // Logic to start camera recording
-    }
-
-    pub fn stop_camera_recording(&self) {
-        // Logic to stop camera recording
     }
 
     fn prepare_transmitter_data_packet(
@@ -101,39 +93,48 @@ impl Context {
             vel: processor_data_packet.vertical_velocity,
             max_alt: processor_data_packet.maximum_altitude,
             temp: imu_data_packet.temperature,
-            orientation: TransmitterDataPacket::quaternion_to_euler(imu_data_packet.quaternion),
+            gyro: imu_data_packet.gyro,
         }
     }
 
     // / Waits for the "SALT BOOT" command from the transmitter, so we can start the hot loop.
     // / The main loop will call this function in a loop until it returns true.
-    // pub fn wait_for_boot_command(&mut self) -> bool {
-    //     match self.transmitter.read() {
-    //         Ok(data) if data == "SALT BOOT" => {
-    //             println!("Received SALT BOOT command, transitioning to Countdown state.");
-    //             self.start_camera_recording();
-    //             self.state = RocketState::Countdown(CountdownState {});
-    //             true
-    //         }
-    //         Ok(data) if data == "wait" => {
-    //             println!("waiting for start command");
-    //             false
-    //         }
+    pub fn wait_for_boot_command(&mut self) -> bool {
+        let command = if let Some(transmitter) = &mut self.transmitter {
+            transmitter.read()
+        } else {
+            eprintln!("No transmitter available, starting countdown anyway.");
+            self.state = RocketState::Countdown(CountdownState {});
+            return true;
+        };
 
-    //         Ok(data) => {
-    //             println!(
-    //                 "Unknown command received: {}. Staying in Standby state.",
-    //                 data
-    //             );
-    //             false
-    //         }
+        match command {
+            Ok(data) if data == "SALT BOOT" => {
+                println!("Received SALT BOOT command, transitioning to Countdown state.");
+                self.state = RocketState::Countdown(CountdownState {});
+                true
+            }
+            Ok(data) if data == "wait" => {
+                println!("waiting for boot command...");
+                false
+            }
 
-    //         Err(_) => {
-    //             eprintln!("Failed to read from transmitter, starting countdown anyway.");
-    //             self.start_camera_recording();
-    //             self.state = RocketState::Countdown(CountdownState {});
-    //             true
-    //         }
-    //     }
-    // }
+            Ok(data) => {
+                println!(
+                    "Unknown command received: {}. Staying in Standby state.",
+                    data
+                );
+                false
+            }
+
+            Err(e) => {
+                eprintln!(
+                    "Failed to read from transmitter: {}, starting countdown anyway.",
+                    e
+                );
+                self.state = RocketState::Countdown(CountdownState {});
+                true
+            }
+        }
+    }
 }
