@@ -8,32 +8,13 @@ pub struct TransmitterDataPacket {
     pub alt: f32,
     pub vel: f32,
     pub max_alt: f32,
-    pub temp: f32,             // Temperature in Celsius
-    pub orientation: [f32; 3], // Roll, Pitch, Yaw in degrees
-}
-
-impl TransmitterDataPacket {
-    pub fn quaternion_to_euler(quaternion: [f32; 4]) -> [f32; 3] {
-        let w = quaternion[0];
-        let x = quaternion[1];
-        let y = quaternion[2];
-        let z = quaternion[3];
-
-        // Convert quaternion to Euler angles (roll, pitch, yaw)
-        let roll = (2.0 * (w * x + y * z))
-            .atan2(1.0 - 2.0 * (x * x + y * y))
-            .to_degrees();
-        let pitch = (2.0 * (w * y - z * x)).asin().to_degrees();
-        let yaw = (2.0 * (w * z + x * y))
-            .atan2(1.0 - 2.0 * (y * y + z * z))
-            .to_degrees();
-
-        [roll, pitch, yaw]
-    }
+    pub temp: f32,       // Temperature in Celsius
+    pub gyro: [f32; 3],  // Gyroscope data in rad/s (x, y, z)
 }
 
 pub struct Transmitter {
     port: TTYPort,
+    buffer: String,
 }
 
 impl Transmitter {
@@ -43,21 +24,22 @@ impl Transmitter {
             .open_native()
             .expect("Failed to open serial port");
 
-        Transmitter { port }
+        Transmitter { port, buffer: String::new() }
     }
 
     pub fn transmit(&mut self, data_packet: &TransmitterDataPacket) {
         // TODO: Add the callsign to the output string
+        let state_letter = data_packet.state_name.chars().next().unwrap_or('U');
         let output = format!(
-            "{},{},{},{},{},{},{},{}\n",
-            data_packet.state_name,
+            "{},{:.1},{:.1},{:.1},{:.1},{:.1},{:.1},{:.1}\n",
+            state_letter,
             data_packet.alt,
             data_packet.vel,
             data_packet.max_alt,
             data_packet.temp,
-            data_packet.orientation[0],
-            data_packet.orientation[1],
-            data_packet.orientation[2]
+            data_packet.gyro[0],
+            data_packet.gyro[1],
+            data_packet.gyro[2]
         );
 
         match self.port.write_all(output.as_bytes()) {
@@ -66,20 +48,34 @@ impl Transmitter {
         }
     }
 
-    /// Reads data from the serial port for 7 seconds.
+    /// Reads data from the serial port and accumulates it until a newline is received.
     pub fn read(&mut self) -> Result<String, Box<dyn Error>> {
-        let mut buffer = vec![0; 512];
-        match self.port.read(&mut buffer) {
+        let mut temp_buffer = vec![0; 512];
+        match self.port.read(&mut temp_buffer) {
             Ok(bytes_read) => {
                 if bytes_read > 0 {
-                    Ok(String::from_utf8_lossy(&buffer[..bytes_read]).to_string())
+                    // Append new data to the buffer
+                    self.buffer.push_str(&String::from_utf8_lossy(&temp_buffer[..bytes_read]));
+                    
+                    // Check if we have a complete line (ending with newline)
+                    if let Some(newline_pos) = self.buffer.find('\n') {
+                        // Extract the complete command
+                        let command = self.buffer[..newline_pos].trim().to_string();
+                        // Remove the processed command from the buffer
+                        self.buffer = self.buffer[newline_pos + 1..].to_string();
+                        Ok(command)
+                    } else {
+                        // No complete command yet
+                        Err("Incomplete command".into())
+                    }, return "wait"Ok(String::from("wait"
                 } else {
-                    Err("No data read".into())
+                    // No data read, return "wait"
+                    Ok(String::from("wait"))
                 }
             }
-            Err(_) => match self.port.write(b"Waiting for command") {
-                Ok(_) => Ok(String::from("wait")),
-                Err(_) => Err("Failed to write to port for health check".into()),
+            Err(_) => {
+                // Read error, return "wait"
+                Ok(String::from("wait"))
             },
         }
     }
