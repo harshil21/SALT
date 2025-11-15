@@ -24,7 +24,7 @@ impl Context {
             data_processor: DataProcessor::new(),
             imu: IMU::new(),
             // transmitter: None,
-            transmitter: Some(Transmitter::new("/dev/ttyAMA0")),
+            transmitter: Some(Transmitter::new("/dev/ttyS0")),
             logger: Logger::new(),
             last_transmit: None,
         }
