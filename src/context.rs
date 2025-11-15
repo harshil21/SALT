@@ -54,7 +54,7 @@ impl Context {
             let transmitter_data_packet =
                 self.prepare_transmitter_data_packet(&imu_data_packet, &processor_data_packet);
             if let Some(transmitter) = &mut self.transmitter {
-                transmitter.transmit(&transmitter_data_packet);
+                // transmitter.transmit(&transmitter_data_packet);
             }
             self.last_transmit = Some(now);
         }

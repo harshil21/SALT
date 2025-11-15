@@ -1,5 +1,4 @@
 use bmp280::Bmp280Builder;
-use linux_bno055::Bno055;
 use std::io::Write;
 use std::process::{Command, Stdio};
 use std::thread;
@@ -78,7 +77,6 @@ fn transmit_data() {
 }
 
 fn run_sensors() {
-    let mut sensor = init_orientation_sensor();
     let mut bmp280 = init_pressure_sensor();
     let mut transmitted_packet = TransmittedPacket {
         pressure: 0.0,
@@ -112,25 +110,7 @@ fn run_sensors() {
             println!("Read/write error");
         }
 
-        // Orientation
-        match sensor.get_euler_angles() {
-            Ok(euler) => {
-                println!("Orientation: {:?}", euler);
-                transmitted_packet.orientation = (euler.x, euler.y, euler.z);
-            }
-            Err(e) => {
-                eprintln!("Error reading orientation: {:?}", e);
-            }
-        }
-
-        match sensor.get_linear_acceleration() {
-            Ok(accel) => {
-                println!("Linear Acceleration: {:?}", accel);
-            }
-            Err(e) => {
-                eprintln!("Error reading linear acceleration: {:?}", e);
-            }
-        }
+        // Orientation sensor removed (BNO055 crate not included). Orientation fields left at defaults.
 
 
         std::thread::sleep(std::time::Duration::from_millis(50));
@@ -150,13 +130,4 @@ fn init_pressure_sensor() -> bmp280::Bmp280 {
     return bmp280;
 }
 
-fn init_orientation_sensor() -> Bno055 {
-    // Initialize the BNO055 sensor
-    // let mut delay = Delay;
-    // let i2c = I2cdev::new("/dev/i2c-1")
-    //     .expect("Failed to open I2C device");
-
-    // let mut sensor = bno055::Bno055::new(i2c);
-    let sensor = Bno055::new("/dev/i2c-1").expect("Failed to create BNO055 sensor instance");
-    sensor
-}
+// Orientation sensor initialization removed.
